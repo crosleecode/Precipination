@@ -50,22 +50,7 @@ class MainActivity : ComponentActivity() {
 fun PrecipinationScreen(modifier: Modifier = Modifier) {
 
     Column(modifier = modifier.fillMaxSize()){
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(Color.LightGray)
-        ) {
-            Text(
-                text = stringResource(id = R.string.app_name),
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.Black,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = 16.dp)
-            )
-        }
+        TopBar();
     }
 
     Column(
@@ -74,56 +59,87 @@ fun PrecipinationScreen(modifier: Modifier = Modifier) {
             .padding(top = 128.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        Text(
-            text = stringResource(id = R.string.location),
-            fontSize = 20.sp,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
-        )
+        CurrentLocation();
         Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 32.dp)
-        ) {
-            Column(modifier = Modifier) {
-                Text(
-                    text = stringResource(id = R.string.temperature),
-                    fontSize = 72.sp,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-                Text(
-                    text = stringResource(id = R.string.feels_like),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(112.dp))
-
-            AndroidView(
-                modifier = Modifier
-                    .size(72.dp)
-                    .padding(start = 8.dp),
-                factory = { context ->
-                    ImageView(context).apply {
-                        setImageResource(R.drawable.clear_skies)
-                    }
-                }
-            )
-
-        }
-
+        CurrentWeather();
         Spacer(modifier = Modifier.height(16.dp))
-
-        Column(modifier = Modifier.padding(horizontal = 32.dp)) {
-            Text(text = stringResource(id = R.string.low_temp), fontSize = 20.sp)
-            Text(text = stringResource(id = R.string.high_temp), fontSize = 20.sp)
-            Text(text = stringResource(id = R.string.humidity), fontSize = 20.sp)
-            Text(text = stringResource(id = R.string.pressure), fontSize = 20.sp)
-        }
+        WeatherStats();
     }
 
+}
+
+@Composable
+fun TopBar(){
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .background(Color.LightGray)
+    ) {
+        Text(
+            text = stringResource(id = R.string.app_name),
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.Black,
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
+        )
+    }
+}
+
+@Composable
+fun CurrentLocation(){
+    Text(
+        text = stringResource(id = R.string.location),
+        fontSize = 20.sp,
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center
+    )
+}
+
+@Composable
+fun CurrentWeather(){
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(horizontal = 32.dp)
+    ) {
+        Column(modifier = Modifier) {
+            Text(
+                text = stringResource(id = R.string.temperature),
+                fontSize = 72.sp,
+                modifier = Modifier.padding(start = 16.dp)
+            )
+            Text(
+                text = stringResource(id = R.string.feels_like),
+                fontSize = 14.sp,
+                modifier = Modifier.padding(start = 16.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(112.dp))
+
+        AndroidView(
+            modifier = Modifier
+                .size(72.dp)
+                .padding(start = 8.dp),
+            factory = { context ->
+                ImageView(context).apply {
+                    setImageResource(R.drawable.clear_skies)
+                }
+            }
+        )
+
+    }
+}
+
+@Composable
+fun WeatherStats(){
+    Column(modifier = Modifier.padding(horizontal = 32.dp)) {
+        Text(text = stringResource(id = R.string.low_temp), fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.high_temp), fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.humidity), fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.pressure), fontSize = 20.sp)
+    }
 }
 
 @Preview(showBackground = true, showSystemUi = true)

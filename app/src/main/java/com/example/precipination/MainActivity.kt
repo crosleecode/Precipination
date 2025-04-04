@@ -31,11 +31,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val PrecipinationService = createRetrofitService()
+        val apiKey = resources.getString(R.string.open_weather_key)
+        val viewModel = PrecipinationViewModel(precipinationService = PrecipinationService, apiKey)
+        viewModel.fetchWeatherData()
+
         setContent {
             PrecipinationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -140,6 +154,22 @@ fun WeatherStats(){
         Text(text = stringResource(id = R.string.humidity), fontSize = 20.sp)
         Text(text = stringResource(id = R.string.pressure), fontSize = 20.sp)
     }
+}
+
+fun createRetrofitService(): PrecipinationService {
+    val logging = HttpLoggingInterceptor()
+    logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+    val client: OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor(logging)
+        .build()
+    return Retrofit.Builder()
+        .baseUrl("https://api.openweathermap.org/data/2.5/weather")
+        .client(client)
+        .addConverterFactory(Json.asConverterFactory(
+            "application/json".toMediaType()
+        ))
+        .build()
+        .create(WeatherService::class.java)
 }
 
 @Preview(showBackground = true, showSystemUi = true)

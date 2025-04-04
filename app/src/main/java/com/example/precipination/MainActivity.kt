@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -45,10 +44,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val PrecipinationService = createRetrofitService()
+
+        val precipinationService = createRetrofitService()
         val apiKey = resources.getString(R.string.open_weather_key)
-        val viewModel = PrecipinationViewModel(precipinationService = PrecipinationService, apiKey)
-        viewModel.fetchWeatherData()
+        val viewModel = PrecipinationViewModel(precipinationService, apiKey)
+        viewModel.fetchWeatherData(getString(R.string.location))
 
         setContent {
             PrecipinationTheme {
@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
 fun PrecipinationScreen(modifier: Modifier = Modifier) {
 
     Column(modifier = modifier.fillMaxSize()){
-        TopBar();
+        TopBar()
     }
 
     Column(
@@ -73,11 +73,11 @@ fun PrecipinationScreen(modifier: Modifier = Modifier) {
             .padding(top = 128.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        CurrentLocation();
+        CurrentLocation()
         Spacer(modifier = Modifier.height(16.dp))
-        CurrentWeather();
+        CurrentWeather()
         Spacer(modifier = Modifier.height(16.dp))
-        WeatherStats();
+        WeatherStats()
     }
 
 }
@@ -163,13 +163,13 @@ fun createRetrofitService(): PrecipinationService {
         .addInterceptor(logging)
         .build()
     return Retrofit.Builder()
-        .baseUrl("https://api.openweathermap.org/data/2.5/weather")
+        .baseUrl("https://api.openweathermap.org/data/2.5/")
         .client(client)
         .addConverterFactory(Json.asConverterFactory(
             "application/json".toMediaType()
         ))
         .build()
-        .create(WeatherService::class.java)
+        .create(PrecipinationService::class.java)
 }
 
 @Preview(showBackground = true, showSystemUi = true)

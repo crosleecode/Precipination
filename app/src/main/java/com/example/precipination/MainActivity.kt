@@ -1,6 +1,7 @@
 package com.example.precipination
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -31,12 +33,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 
+//Assignment 3
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import androidx.compose.runtime.livedata.observeAsState
 
 
 
@@ -47,21 +51,28 @@ class MainActivity : ComponentActivity() {
 
         val precipinationService = createRetrofitService()
         val apiKey = resources.getString(R.string.open_weather_key)
-        val viewModel = PrecipinationViewModel(precipinationService, apiKey)
-        viewModel.fetchWeatherData(getString(R.string.location))
+        val precipinationViewModel = PrecipinationViewModel(precipinationService, apiKey)
+        precipinationViewModel.fetchWeatherData(getString(R.string.location))
 
         setContent {
             PrecipinationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    PrecipinationScreen(modifier = Modifier.padding(innerPadding))
+                    val weatherData by precipinationViewModel.weatherInfo.observeAsState()
+
+                    PrecipinationScreen(modifier = Modifier.padding(innerPadding), weatherData = weatherData)
                 }
             }
         }
     }
 }
 
+fun tempConversion(kelvin : Double): Int{
+    val fahrenheit = ((kelvin - 273.15) * 9/5 + 32).toInt()
+    return fahrenheit
+}
+
 @Composable
-fun PrecipinationScreen(modifier: Modifier = Modifier) {
+fun PrecipinationScreen(modifier: Modifier = Modifier, weatherData: WeatherInfo?) {
 
     Column(modifier = modifier.fillMaxSize()){
         TopBar()
@@ -75,9 +86,9 @@ fun PrecipinationScreen(modifier: Modifier = Modifier) {
     ) {
         CurrentLocation()
         Spacer(modifier = Modifier.height(16.dp))
-        CurrentWeather()
+        CurrentWeather(weatherData)
         Spacer(modifier = Modifier.height(16.dp))
-        WeatherStats()
+        WeatherStats(weatherData)
     }
 
 }
@@ -112,19 +123,22 @@ fun CurrentLocation(){
 }
 
 @Composable
-fun CurrentWeather(){
+fun CurrentWeather(weatherData : WeatherInfo?) {
+    val temp = weatherData?.main?.temp?.let { tempConversion(it) } ?: 0
+    val feelsLike = weatherData?.main?.feelsLike?.let { tempConversion(it) } ?: 0
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(horizontal = 32.dp)
     ) {
         Column(modifier = Modifier) {
             Text(
-                text = stringResource(id = R.string.temperature),
+                text = stringResource(id = R.string.temperature, temp),
                 fontSize = 72.sp,
                 modifier = Modifier.padding(start = 16.dp)
             )
             Text(
-                text = stringResource(id = R.string.feels_like),
+                text = stringResource(id = R.string.feels_like, feelsLike),
                 fontSize = 14.sp,
                 modifier = Modifier.padding(start = 16.dp)
             )
@@ -147,10 +161,13 @@ fun CurrentWeather(){
 }
 
 @Composable
-fun WeatherStats(){
+fun WeatherStats(weatherData : WeatherInfo?) {
+    val low = weatherData?.main?.tempMin?.let { tempConversion(it) } ?: 0
+    val high = weatherData?.main?.tempMax?.let { tempConversion(it) } ?: 0
+
     Column(modifier = Modifier.padding(horizontal = 32.dp)) {
-        Text(text = stringResource(id = R.string.low_temp), fontSize = 20.sp)
-        Text(text = stringResource(id = R.string.high_temp), fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.low_temp, low), fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.high_temp, high), fontSize = 20.sp)
         Text(text = stringResource(id = R.string.humidity), fontSize = 20.sp)
         Text(text = stringResource(id = R.string.pressure), fontSize = 20.sp)
     }
@@ -159,15 +176,20 @@ fun WeatherStats(){
 fun createRetrofitService(): PrecipinationService {
     val logging = HttpLoggingInterceptor()
     logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+
     val client: OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(logging)
         .build()
+
+    val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+    }
+
     return Retrofit.Builder()
         .baseUrl("https://api.openweathermap.org/data/2.5/")
         .client(client)
-        .addConverterFactory(Json.asConverterFactory(
-            "application/json".toMediaType()
-        ))
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
         .create(PrecipinationService::class.java)
 }
@@ -176,6 +198,6 @@ fun createRetrofitService(): PrecipinationService {
 @Composable
 fun PrecipinationPreview() {
     PrecipinationTheme {
-        PrecipinationScreen()
+        //PrecipinationScreen()
     }
 }

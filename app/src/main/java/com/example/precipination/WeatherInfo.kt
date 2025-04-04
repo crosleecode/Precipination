@@ -21,7 +21,9 @@ data class WeatherData(
     @SerialName("temp_max")
     val tempMax: Double = 0.0,
 
+    @SerialName("pressure")
     val pressure: Int = 0,
 
+    @SerialName("humidity")
     val humidity: Int = 0
 )

@@ -5,6 +5,6 @@
     <string name="feels_like">Feels like %1$d°</string>
     <string name="low_temp">Low %1$d°</string>
     <string name="high_temp">High %1$d°</string>
-    <string name="humidity">Humidity %1$d%</string>
+    <string name="humidity">Humidity %1$d%%</string>
     <string name="pressure">Pressure %1$d hPa</string>
 </resources>

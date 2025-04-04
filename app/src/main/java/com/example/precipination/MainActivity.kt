@@ -1,7 +1,6 @@
 package com.example.precipination
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -164,12 +163,14 @@ fun CurrentWeather(weatherData : WeatherInfo?) {
 fun WeatherStats(weatherData : WeatherInfo?) {
     val low = weatherData?.main?.tempMin?.let { tempConversion(it) } ?: 0
     val high = weatherData?.main?.tempMax?.let { tempConversion(it) } ?: 0
+    val humidity = weatherData?.main?.humidity ?: 0
+    val pressure = weatherData?.main?.pressure ?: 0
 
     Column(modifier = Modifier.padding(horizontal = 32.dp)) {
         Text(text = stringResource(id = R.string.low_temp, low), fontSize = 20.sp)
         Text(text = stringResource(id = R.string.high_temp, high), fontSize = 20.sp)
-        Text(text = stringResource(id = R.string.humidity), fontSize = 20.sp)
-        Text(text = stringResource(id = R.string.pressure), fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.humidity, humidity), fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.pressure, pressure), fontSize = 20.sp)
     }
 }
 

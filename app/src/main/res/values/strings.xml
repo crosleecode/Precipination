@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Precipination</string>
-    <string name="location">St. Paul, US</string>
+    <string name="default_zip">55082</string>
+    <string name="city">%1$s</string>
+    <string name="zip_code">Zip Code</string>
+    <string name="submit_button">Submit</string>
     <string name="temperature">%1$d°</string>
     <string name="feels_like">Feels like %1$d°</string>
     <string name="low_temp">Low %1$d°</string>

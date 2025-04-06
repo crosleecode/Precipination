@@ -19,8 +19,8 @@ class PrecipinationViewModel(
     private val _weatherInfo : MutableLiveData<WeatherInfo> = MutableLiveData()
     val weatherInfo : LiveData<WeatherInfo> = _weatherInfo
 
-    fun fetchWeatherData(city : String) {
-        val call = precipinationService.getCurrentWeather(city, apiKey)
+    fun fetchWeatherData(zipCode : String) {
+        val call = precipinationService.getCurrentWeather(zipCode, apiKey)
         call.enqueue(object : Callback<WeatherInfo> {
             override fun onResponse(p0: Call<WeatherInfo>, p1: Response<WeatherInfo>) {
                 if (p1.isSuccessful) {

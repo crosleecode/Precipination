@@ -8,7 +8,7 @@ interface PrecipinationService {
 
     @GET("weather")
     fun getCurrentWeather(
-        @Query("q") city: String,
+        @Query("zip") zipCode: String,
         @Query("appid") apiKey: String
     ): Call<WeatherInfo>
 }

@@ -41,6 +41,15 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import androidx.compose.runtime.livedata.observeAsState
 
+//Assignment 4
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.input.KeyboardType
+
+
 
 
 class MainActivity : ComponentActivity() {
@@ -51,14 +60,17 @@ class MainActivity : ComponentActivity() {
         val precipinationService = createRetrofitService()
         val apiKey = resources.getString(R.string.open_weather_key)
         val precipinationViewModel = PrecipinationViewModel(precipinationService, apiKey)
-        precipinationViewModel.fetchWeatherData(getString(R.string.location))
+        precipinationViewModel.fetchWeatherData(getString(R.string.default_zip))
 
         setContent {
             PrecipinationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val weatherData by precipinationViewModel.weatherInfo.observeAsState()
 
-                    PrecipinationScreen(modifier = Modifier.padding(innerPadding), weatherData = weatherData)
+                    PrecipinationScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        weatherData = weatherData,
+                        onSubmit = {zipCode -> precipinationViewModel.fetchWeatherData(zipCode)})
                 }
             }
         }
@@ -71,7 +83,7 @@ fun tempConversion(kelvin : Double): Int{
 }
 
 @Composable
-fun PrecipinationScreen(modifier: Modifier = Modifier, weatherData: WeatherInfo?) {
+fun PrecipinationScreen(modifier: Modifier = Modifier, weatherData: WeatherInfo?, onSubmit: (String)->Unit) {
 
     Column(modifier = modifier.fillMaxSize()){
         TopBar()
@@ -83,7 +95,7 @@ fun PrecipinationScreen(modifier: Modifier = Modifier, weatherData: WeatherInfo?
             .padding(top = 128.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        CurrentLocation()
+        CurrentLocation(city = weatherData?.name, onSubmit = onSubmit)
         Spacer(modifier = Modifier.height(16.dp))
         CurrentWeather(weatherData)
         Spacer(modifier = Modifier.height(16.dp))
@@ -112,13 +124,57 @@ fun TopBar(){
 }
 
 @Composable
-fun CurrentLocation(){
-    Text(
+fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
+    val zipCode = remember { mutableStateOf("") }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = zipCode.value,
+                onValueChange = {
+                    if (it.length <= 5 && it.all { char -> char.isDigit() }) {
+                        zipCode.value = it
+                    }
+                },
+                label = { Text(stringResource(R.string.zip_code)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                modifier = Modifier.weight(1f)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(onClick = {
+                if (zipCode.value.length == 5) {
+                    onSubmit(zipCode.value)
+                }
+            }) {
+                Text(stringResource(R.string.submit_button))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        city?.let {
+            Text(
+                text = stringResource(R.string.city, it),
+                fontSize = 20.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+    /*Text(
         text = stringResource(id = R.string.location),
         fontSize = 20.sp,
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center
-    )
+    )*/
 }
 
 @Composable

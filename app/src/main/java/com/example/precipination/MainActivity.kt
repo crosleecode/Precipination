@@ -48,8 +48,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.input.KeyboardType
-
-
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.MutableState
 
 
 class MainActivity : ComponentActivity() {
@@ -66,11 +66,18 @@ class MainActivity : ComponentActivity() {
             PrecipinationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val weatherData by precipinationViewModel.weatherInfo.observeAsState()
+                    val alert by precipinationViewModel.alert.observeAsState()
+
+                    val displayAlert = remember(alert){ mutableStateOf(alert != null)}
 
                     PrecipinationScreen(
                         modifier = Modifier.padding(innerPadding),
                         weatherData = weatherData,
-                        onSubmit = {zipCode -> precipinationViewModel.fetchWeatherData(zipCode)})
+                        onSubmit = {zipCode -> precipinationViewModel.fetchWeatherData(zipCode)}
+                    )
+
+                    InvalidZipAlert(alert,displayAlert)
+
                 }
             }
         }
@@ -134,14 +141,13 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
             .padding(horizontal = 32.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+
             OutlinedTextField(
                 value = zipCode.value,
                 onValueChange = {
-                    if (it.length <= 5 && it.all { char -> char.isDigit() }) {
-                        zipCode.value = it
-                    }
+                    zipCode.value = it
                 },
-                label = { Text(stringResource(R.string.zip_code)) },
+                label = {Text(stringResource(R.string.zip_code))},
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 modifier = Modifier.weight(1f)
@@ -169,12 +175,6 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
             )
         }
     }
-    /*Text(
-        text = stringResource(id = R.string.location),
-        fontSize = 20.sp,
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center
-    )*/
 }
 
 @Composable
@@ -249,6 +249,23 @@ fun createRetrofitService(): PrecipinationService {
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
         .create(PrecipinationService::class.java)
+}
+
+@Composable
+fun InvalidZipAlert(alert : String?, displayAlert : MutableState<Boolean>){
+    if(displayAlert.value && alert != null){
+        AlertDialog(
+            onDismissRequest = {displayAlert.value = false},
+            confirmButton = {
+                Button(onClick = {displayAlert.value = false}, modifier = Modifier.width(96.dp)){
+                    Text(stringResource(R.string.ok_button))
+                }
+            },
+            title = {Text("ALERT")},
+            text = {Text(alert)}
+
+        )
+    }
 }
 
 @Preview(showBackground = true, showSystemUi = true)

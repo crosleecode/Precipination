@@ -44,12 +44,17 @@ import androidx.compose.runtime.livedata.observeAsState
 //Assignment 4
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.MutableState
+
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.runtime.LaunchedEffect
 
 
 class MainActivity : ComponentActivity() {
@@ -68,7 +73,11 @@ class MainActivity : ComponentActivity() {
                     val weatherData by precipinationViewModel.weatherInfo.observeAsState()
                     val alert by precipinationViewModel.alert.observeAsState()
 
-                    val displayAlert = remember(alert){ mutableStateOf(alert != null)}
+                    val displayAlert = remember{ mutableStateOf(false)}
+
+                    LaunchedEffect(alert) {
+                        displayAlert.value = alert != null
+                    }
 
                     PrecipinationScreen(
                         modifier = Modifier.padding(innerPadding),
@@ -76,7 +85,7 @@ class MainActivity : ComponentActivity() {
                         onSubmit = {zipCode -> precipinationViewModel.fetchWeatherData(zipCode)}
                     )
 
-                    InvalidZipAlert(alert,displayAlert)
+                    InvalidZipAlert(alert,displayAlert, precipinationViewModel)
 
                 }
             }
@@ -133,6 +142,13 @@ fun TopBar(){
 @Composable
 fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
     val zipCode = remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -142,7 +158,7 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
 
-            OutlinedTextField(
+            TextField(
                 value = zipCode.value,
                 onValueChange = {
                     zipCode.value = it
@@ -150,15 +166,15 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
                 label = {Text(stringResource(R.string.zip_code))},
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester)
             )
 
             Spacer(modifier = Modifier.width(8.dp))
 
             Button(onClick = {
-                if (zipCode.value.length == 5) {
                     onSubmit(zipCode.value)
-                }
             }) {
                 Text(stringResource(R.string.submit_button))
             }
@@ -207,7 +223,7 @@ fun CurrentWeather(weatherData : WeatherInfo?) {
                 .padding(start = 8.dp),
             factory = { context ->
                 ImageView(context).apply {
-                    setImageResource(R.drawable.clear_skies)
+                    setImageResource(R.drawable.clear_skies_d)
                 }
             }
         )
@@ -252,12 +268,17 @@ fun createRetrofitService(): PrecipinationService {
 }
 
 @Composable
-fun InvalidZipAlert(alert : String?, displayAlert : MutableState<Boolean>){
+fun InvalidZipAlert(alert : String?, displayAlert : MutableState<Boolean>, precipinationViewModel: PrecipinationViewModel){
     if(displayAlert.value && alert != null){
         AlertDialog(
             onDismissRequest = {displayAlert.value = false},
             confirmButton = {
-                Button(onClick = {displayAlert.value = false}, modifier = Modifier.width(96.dp)){
+                Button(
+                    onClick = {
+                        displayAlert.value = false
+                        precipinationViewModel.clearAlert()
+                    },
+                    modifier = Modifier.width(96.dp)){
                     Text(stringResource(R.string.ok_button))
                 }
             },

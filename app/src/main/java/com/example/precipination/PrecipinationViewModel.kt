@@ -39,5 +39,9 @@ class PrecipinationViewModel(
         })
     }
 
+    fun clearAlert() {
+        _alert.value = null
+    }
+
 
 }

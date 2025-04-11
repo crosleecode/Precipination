@@ -6,7 +6,15 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class WeatherInfo(
     val main: WeatherData= WeatherData(),
-    val name: String = ""
+    val name: String = "",
+    val weather: List<WeatherCondition> = emptyList()
+)
+
+@Serializable
+data class WeatherCondition(
+    val icon: String = "",
+    val main: String = "",
+    val description: String = ""
 )
 
 @Serializable

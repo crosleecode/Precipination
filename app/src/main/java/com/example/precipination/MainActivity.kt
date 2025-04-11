@@ -1,6 +1,7 @@
 package com.example.precipination
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -198,6 +199,9 @@ fun CurrentWeather(weatherData : WeatherInfo?) {
     val temp = weatherData?.main?.temp?.let { tempConversion(it) } ?: 0
     val feelsLike = weatherData?.main?.feelsLike?.let { tempConversion(it) } ?: 0
 
+    val iconCode = weatherData?.weather?.firstOrNull()?.icon
+    val iconImage = iconCode?.let { getWeatherIcon(it) } ?: R.drawable.clear_skies_d
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(horizontal = 32.dp)
@@ -218,14 +222,15 @@ fun CurrentWeather(weatherData : WeatherInfo?) {
         Spacer(modifier = Modifier.width(112.dp))
 
         AndroidView(
+            factory = { context ->
+                ImageView(context)
+            },
+            update = { imageView ->
+                imageView.setImageResource(iconImage)
+            },
             modifier = Modifier
                 .size(72.dp)
-                .padding(start = 8.dp),
-            factory = { context ->
-                ImageView(context).apply {
-                    setImageResource(R.drawable.clear_skies_d)
-                }
-            }
+                .padding(start = 8.dp)
         )
 
     }
@@ -286,6 +291,21 @@ fun InvalidZipAlert(alert : String?, displayAlert : MutableState<Boolean>, preci
             text = {Text(alert)}
 
         )
+    }
+}
+
+fun getWeatherIcon(iconCode: String): Int {
+    return when (iconCode) {
+        "01d" -> R.drawable.clear_skies_d
+        "01n" -> R.drawable.clear_skies_n
+        "02d", "03d" -> R.drawable.light_clouds_d
+        "02n", "03n" -> R.drawable.light_clouds_n
+        "04d", "04n" -> R.drawable.cloudy
+        "09d", "09n", "10d", "10n" -> R.drawable.rain
+        "11d", "11n" -> R.drawable.thunder
+        "13d", "13n" -> R.drawable.snow
+        "50d", "50n" -> R.drawable.mist
+        else -> R.drawable.clear_skies_n
     }
 }
 

@@ -59,6 +59,9 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     //
 
+    implementation(libs.androidx.navigation)
+    implementation(libs.androidx.navigation.compose.v289)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

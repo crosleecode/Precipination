@@ -11,4 +11,7 @@
     <string name="high_temp">High %1$d°</string>
     <string name="humidity">Humidity %1$d%%</string>
     <string name="pressure">Pressure %1$d hPa</string>
+    <string name="alert">ALERT</string>
+    <string name="high_low">%1$d°/%2$d°</string>
+    <string name="back_button">Back</string>
 </resources>

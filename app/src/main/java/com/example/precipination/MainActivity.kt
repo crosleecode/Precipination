@@ -1,10 +1,13 @@
 package com.example.precipination
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +44,24 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import androidx.compose.runtime.livedata.observeAsState
 
+//Assignment 4
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 
 
 class MainActivity : ComponentActivity() {
@@ -51,14 +72,60 @@ class MainActivity : ComponentActivity() {
         val precipinationService = createRetrofitService()
         val apiKey = resources.getString(R.string.open_weather_key)
         val precipinationViewModel = PrecipinationViewModel(precipinationService, apiKey)
-        precipinationViewModel.fetchWeatherData(getString(R.string.location))
+        precipinationViewModel.fetchWeatherData(getString(R.string.default_zip))
 
         setContent {
-            PrecipinationTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val weatherData by precipinationViewModel.weatherInfo.observeAsState()
 
-                    PrecipinationScreen(modifier = Modifier.padding(innerPadding), weatherData = weatherData)
+            PrecipinationTheme {
+                Box(modifier = Modifier.fillMaxSize()) {
+
+                    Image(
+                        painter = painterResource(id = R.drawable.rain_precipination),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    Scaffold(modifier = Modifier.fillMaxSize(), containerColor = Color.Transparent) { innerPadding ->
+                        val weatherData by precipinationViewModel.weatherInfo.observeAsState()
+                        val alert by precipinationViewModel.alert.observeAsState()
+
+                        val navController = rememberNavController()
+                        val forecastData by precipinationViewModel.forecastInfo.observeAsState()
+
+                        val displayAlert = remember { mutableStateOf(false) }
+
+                        LaunchedEffect(alert) {
+                            displayAlert.value = alert != null
+                        }
+
+                        NavHost(navController = navController, startDestination = "main") {
+                            composable("main") {
+                                PrecipinationScreen(
+                                    modifier = Modifier.padding(innerPadding),
+                                    weatherData = weatherData,
+                                    onSubmit = { zipCode ->
+                                        precipinationViewModel.fetchWeatherData(
+                                            zipCode
+                                        )
+                                    },
+                                    onForecastClick = {
+                                        precipinationViewModel.fetchForecast()
+                                        navController.navigate("forecast")
+                                    }
+                                )
+                            }
+
+                            composable("forecast") {
+                                ForecastScreen(
+                                    forecastList = forecastData ?: emptyList(),
+                                    onBackClicked = { navController.popBackStack() }
+                                )
+                            }
+                        }
+                        InvalidZipAlert(alert, displayAlert, precipinationViewModel)
+
+                    }
                 }
             }
         }
@@ -71,10 +138,12 @@ fun tempConversion(kelvin : Double): Int{
 }
 
 @Composable
-fun PrecipinationScreen(modifier: Modifier = Modifier, weatherData: WeatherInfo?) {
+fun PrecipinationScreen(modifier: Modifier = Modifier, weatherData: WeatherInfo?, onSubmit: (String)->Unit, onForecastClick: () -> Unit) {
 
-    Column(modifier = modifier.fillMaxSize()){
-        TopBar()
+    Column(modifier = Modifier.fillMaxSize()) {
+        Spacer(modifier = Modifier.height(52.dp))
+
+        TopBar(onForecastClick = onForecastClick)
     }
 
     Column(
@@ -83,42 +152,92 @@ fun PrecipinationScreen(modifier: Modifier = Modifier, weatherData: WeatherInfo?
             .padding(top = 128.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        CurrentLocation()
+        CurrentLocation(city = weatherData?.name, onSubmit = onSubmit)
         Spacer(modifier = Modifier.height(16.dp))
         CurrentWeather(weatherData)
         Spacer(modifier = Modifier.height(16.dp))
         WeatherStats(weatherData)
+
     }
 
 }
 
 @Composable
-fun TopBar(){
+fun TopBar(onForecastClick: () -> Unit){
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .background(Color.LightGray)
+            .background(Color(0xFF3C3B6E))
     ) {
         Text(
             text = stringResource(id = R.string.app_name),
+            fontFamily = FontFamily.Monospace,
             style = MaterialTheme.typography.titleLarge,
-            color = Color.Black,
+            color = Color.White,
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 16.dp)
         )
+
+        Button(
+            onClick = onForecastClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB22234)),
+            border = BorderStroke(2.dp, Color.White),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 32.dp)
+        ) {
+            Text("Forecast", color = Color.White)
+        }
     }
 }
 
 @Composable
-fun CurrentLocation(){
-    Text(
-        text = stringResource(id = R.string.location),
-        fontSize = 20.sp,
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center
-    )
+fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
+    val zipCode = remember { mutableStateOf("") }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+
+            TextField(
+                value = zipCode.value,
+                onValueChange = {
+                    zipCode.value = it
+                },
+                label = {Text(stringResource(R.string.zip_code))},
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                modifier = Modifier.weight(1f)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(onClick = {
+                    onSubmit(zipCode.value)
+            }) {
+                Text(stringResource(R.string.submit_button))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        city?.let {
+            Text(
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                text = stringResource(R.string.city, it),
+                fontSize = 20.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
 }
 
 @Composable
@@ -126,17 +245,24 @@ fun CurrentWeather(weatherData : WeatherInfo?) {
     val temp = weatherData?.main?.temp?.let { tempConversion(it) } ?: 0
     val feelsLike = weatherData?.main?.feelsLike?.let { tempConversion(it) } ?: 0
 
+    val iconCode = weatherData?.weather?.firstOrNull()?.icon
+    val iconImage = iconCode?.let { getWeatherIcon(it) } ?: R.drawable.clear_skies_d
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(horizontal = 32.dp)
     ) {
         Column(modifier = Modifier) {
             Text(
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
                 text = stringResource(id = R.string.temperature, temp),
                 fontSize = 72.sp,
                 modifier = Modifier.padding(start = 16.dp)
             )
             Text(
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
                 text = stringResource(id = R.string.feels_like, feelsLike),
                 fontSize = 14.sp,
                 modifier = Modifier.padding(start = 16.dp)
@@ -146,14 +272,15 @@ fun CurrentWeather(weatherData : WeatherInfo?) {
         Spacer(modifier = Modifier.width(112.dp))
 
         AndroidView(
-            modifier = Modifier
-                .size(72.dp)
-                .padding(start = 8.dp),
             factory = { context ->
-                ImageView(context).apply {
-                    setImageResource(R.drawable.clear_skies)
-                }
-            }
+                ImageView(context)
+            },
+            update = { imageView ->
+                imageView.setImageResource(iconImage)
+            },
+            modifier = Modifier
+                .size(96.dp)
+                .padding(start = 0.dp)
         )
 
     }
@@ -167,10 +294,10 @@ fun WeatherStats(weatherData : WeatherInfo?) {
     val pressure = weatherData?.main?.pressure ?: 0
 
     Column(modifier = Modifier.padding(horizontal = 32.dp)) {
-        Text(text = stringResource(id = R.string.low_temp, low), fontSize = 20.sp)
-        Text(text = stringResource(id = R.string.high_temp, high), fontSize = 20.sp)
-        Text(text = stringResource(id = R.string.humidity, humidity), fontSize = 20.sp)
-        Text(text = stringResource(id = R.string.pressure, pressure), fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.low_temp, low), fontSize = 20.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(id = R.string.high_temp, high), fontSize = 20.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(id = R.string.humidity, humidity), fontSize = 20.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(id = R.string.pressure, pressure), fontSize = 20.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -193,6 +320,43 @@ fun createRetrofitService(): PrecipinationService {
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
         .create(PrecipinationService::class.java)
+}
+
+@Composable
+fun InvalidZipAlert(alert : String?, displayAlert : MutableState<Boolean>, precipinationViewModel: PrecipinationViewModel){
+    if(displayAlert.value && alert != null){
+        AlertDialog(
+            onDismissRequest = {displayAlert.value = false},
+            confirmButton = {
+                Button(
+                    onClick = {
+                        displayAlert.value = false
+                        precipinationViewModel.clearAlert()
+                    },
+                    modifier = Modifier.width(96.dp)){
+                    Text(stringResource(R.string.ok_button))
+                }
+            },
+            title = {Text(stringResource(R.string.alert))},
+            text = {Text(alert)}
+
+        )
+    }
+}
+
+fun getWeatherIcon(iconCode: String): Int {
+    return when (iconCode) {
+        "01d" -> R.drawable.clear_skies_d
+        "01n" -> R.drawable.clear_skies_n
+        "02d", "03d" -> R.drawable.light_clouds_d
+        "02n", "03n" -> R.drawable.light_clouds_n
+        "04d", "04n" -> R.drawable.cloudy
+        "09d", "09n", "10d", "10n" -> R.drawable.rain
+        "11d", "11n" -> R.drawable.thunder
+        "13d", "13n" -> R.drawable.snow
+        "50d", "50n" -> R.drawable.mist
+        else -> R.drawable.clear_skies_n
+    }
 }
 
 @Preview(showBackground = true, showSystemUi = true)

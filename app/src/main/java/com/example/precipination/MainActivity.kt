@@ -63,6 +63,23 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
+//assignment 5
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.core.content.ContextCompat
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MyLocation
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -203,6 +220,14 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
             .fillMaxWidth()
             .padding(horizontal = 32.dp)
     ) {
+
+        val context = LocalContext.current
+        val permissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+                Log.d("LocationPermission", "Permission granted")
+        }
+
         Row(verticalAlignment = Alignment.CenterVertically) {
 
             TextField(
@@ -219,9 +244,28 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
             Spacer(modifier = Modifier.width(8.dp))
 
             Button(onClick = {
-                    onSubmit(zipCode.value)
-            }) {
+                onSubmit(zipCode.value) },
+                modifier = Modifier.width(96.dp)
+            ) {
                 Text(stringResource(R.string.submit_button))
+            }
+
+            IconButton(onClick = {
+                val permissionStatus = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+
+                if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+                    permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                } else {
+                    Log.d("LocationPermission", "Already granted")
+                }
+            }) {
+                Icon(
+                    imageVector = Icons.Outlined.MyLocation,
+                    contentDescription = null
+                )
             }
         }
 

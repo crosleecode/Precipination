@@ -79,6 +79,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import com.google.android.gms.location.LocationServices
+import android.location.Location
+import android.content.Context
+import com.google.android.gms.location.CurrentLocationRequest
+import com.google.android.gms.location.Priority
 
 
 class MainActivity : ComponentActivity() {
@@ -129,7 +134,8 @@ class MainActivity : ComponentActivity() {
                                     onForecastClick = {
                                         precipinationViewModel.fetchForecast()
                                         navController.navigate("forecast")
-                                    }
+                                    },
+                                    precipinationViewModel
                                 )
                             }
 
@@ -155,7 +161,13 @@ fun tempConversion(kelvin : Double): Int{
 }
 
 @Composable
-fun PrecipinationScreen(modifier: Modifier = Modifier, weatherData: WeatherInfo?, onSubmit: (String)->Unit, onForecastClick: () -> Unit) {
+fun PrecipinationScreen(
+    modifier: Modifier = Modifier,
+    weatherData: WeatherInfo?,
+    onSubmit: (String)->Unit,
+    onForecastClick: () -> Unit,
+    precipinationViewModel: PrecipinationViewModel
+) {
 
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.height(52.dp))
@@ -169,7 +181,7 @@ fun PrecipinationScreen(modifier: Modifier = Modifier, weatherData: WeatherInfo?
             .padding(top = 128.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        CurrentLocation(city = weatherData?.name, onSubmit = onSubmit)
+        CurrentLocation(city = weatherData?.name, onSubmit = onSubmit, precipinationViewModel)
         Spacer(modifier = Modifier.height(16.dp))
         CurrentWeather(weatherData)
         Spacer(modifier = Modifier.height(16.dp))
@@ -211,7 +223,7 @@ fun TopBar(onForecastClick: () -> Unit){
 }
 
 @Composable
-fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
+fun CurrentLocation(city : String?, onSubmit: (String) -> Unit, precipinationViewModel: PrecipinationViewModel){
     val zipCode = remember { mutableStateOf("") }
 
     Column(
@@ -225,7 +237,7 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
         val permissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
         ) { isGranted ->
-                Log.d("LocationPermission", "Permission granted")
+                Log.d("LocationPermission", "Already granted")
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -259,7 +271,9 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit){
                 if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
                     permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                 } else {
-                    Log.d("LocationPermission", "Already granted")
+                    getCurrentLocation(context) { lat, lon ->
+                        precipinationViewModel.fetchCurrentLocationWeather(lat, lon)
+                    }
                 }
             }) {
                 Icon(
@@ -343,6 +357,33 @@ fun WeatherStats(weatherData : WeatherInfo?) {
         Text(text = stringResource(id = R.string.humidity, humidity), fontSize = 20.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
         Text(text = stringResource(id = R.string.pressure, pressure), fontSize = 20.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
     }
+}
+
+fun getCurrentLocation(context: Context, onLocationReady: (Double, Double) -> Unit) {
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+    val locationRequest = CurrentLocationRequest.Builder()
+        .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+        .setMaxUpdateAgeMillis(0) // Force fresh result
+        .build()
+
+    try {
+        fusedLocationClient.getCurrentLocation(locationRequest, null)
+            .addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    onLocationReady(location.latitude, location.longitude)
+                } else {
+                    Log.e("Location", "Location is null")
+                }
+            }
+            .addOnFailureListener {
+                Log.e("Location", "Location Failed", it)
+            }
+    } catch (e: SecurityException) {
+        Log.e("Location", "Missing permission", e)
+    }
+
+
 }
 
 fun createRetrofitService(): PrecipinationService {

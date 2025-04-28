@@ -68,12 +68,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.core.content.ContextCompat
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MyLocation
@@ -82,6 +77,9 @@ import androidx.compose.material3.IconButton
 import com.google.android.gms.location.LocationServices
 import android.location.Location
 import android.content.Context
+import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.Priority
 
@@ -181,7 +179,9 @@ fun PrecipinationScreen(
             .padding(top = 128.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        CurrentLocation(city = weatherData?.name, onSubmit = onSubmit, precipinationViewModel)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            CurrentLocation(city = weatherData?.name, onSubmit = onSubmit, precipinationViewModel)
+        }
         Spacer(modifier = Modifier.height(16.dp))
         CurrentWeather(weatherData)
         Spacer(modifier = Modifier.height(16.dp))
@@ -217,11 +217,12 @@ fun TopBar(onForecastClick: () -> Unit){
                 .align(Alignment.CenterEnd)
                 .padding(end = 32.dp)
         ) {
-            Text("Forecast", color = Color.White)
+            Text(stringResource(id = R.string.forecast_button), color = Color.White)
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun CurrentLocation(city : String?, onSubmit: (String) -> Unit, precipinationViewModel: PrecipinationViewModel){
     val zipCode = remember { mutableStateOf("") }
@@ -234,10 +235,18 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit, precipinationVie
     ) {
 
         val context = LocalContext.current
-        val permissionLauncher = rememberLauncherForActivityResult(
+        val locPermissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission()
         ) { isGranted ->
-                Log.d("LocationPermission", "Already granted")
+                Log.d("Location Permission", "Already granted")
+        }
+
+        val notificationPermissionGranted = remember { mutableStateOf(false) }
+
+        val notificationPermissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            notificationPermissionGranted.value = isGranted
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -263,14 +272,27 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit, precipinationVie
             }
 
             IconButton(onClick = {
-                val permissionStatus = ContextCompat.checkSelfPermission(
+                val locPermissionStatus = ContextCompat.checkSelfPermission(
                     context,
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
+                val notificationPermissionStatus = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                )
 
-                if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
-                    permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                } else {
+                if (locPermissionStatus != PackageManager.PERMISSION_GRANTED) {
+                    locPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                }
+
+                if (notificationPermissionStatus != PackageManager.PERMISSION_GRANTED) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+
+
+                if (locPermissionStatus == PackageManager.PERMISSION_GRANTED && (notificationPermissionStatus == PackageManager.PERMISSION_GRANTED)) {
+
+                    context.startForegroundService(Intent(context, NotificationService::class.java))
                     getCurrentLocation(context) { lat, lon ->
                         precipinationViewModel.fetchCurrentLocationWeather(lat, lon)
                     }

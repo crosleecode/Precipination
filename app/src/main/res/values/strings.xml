@@ -14,4 +14,7 @@
     <string name="alert">ALERT</string>
     <string name="high_low">%1$d°/%2$d°</string>
     <string name="back_button">Back</string>
+    <string name="forecast_button">Forecast</string>
+    <string name="getting_weather">Getting weather...</string>
+    <string name="precipination_notifications">Precipination Notifications</string>
 </resources>

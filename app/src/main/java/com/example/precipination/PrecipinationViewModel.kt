@@ -75,12 +75,10 @@ class PrecipinationViewModel(
                 if(p1.isSuccessful){
                     p1.body()?.let { data ->
                         _weatherInfo.value = data
-                        _alert.value = null
                         coordinates = data.coord
                         Log.d("WeatherInfo", "City name: ${data.name}")
                     }
                 }else {
-                    _alert.value = "Invalid Zip Code"
                     Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
                 }
             }

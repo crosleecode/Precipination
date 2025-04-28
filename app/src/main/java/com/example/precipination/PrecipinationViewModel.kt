@@ -27,6 +27,7 @@ class PrecipinationViewModel(
 
     fun fetchWeatherData(zipCode : String) {
         val call = precipinationService.getCurrentWeather(zipCode, apiKey)
+
         call.enqueue(object : Callback<WeatherInfo> {
             override fun onResponse(p0: Call<WeatherInfo>, p1: Response<WeatherInfo>) {
                 if (p1.isSuccessful) {
@@ -50,6 +51,7 @@ class PrecipinationViewModel(
     fun fetchForecast() {
         val coords = weatherInfo.value?.coord ?: return
         val call = precipinationService.getForecast(lat = coords.lat, lon = coords.lon, cnt = 16, apiKey = apiKey)
+
         call.enqueue(object : Callback<ForecastInfo> {
             override fun onResponse(p0: Call<ForecastInfo>, p1: Response<ForecastInfo>) {
                 if (p1.isSuccessful) {
@@ -64,6 +66,30 @@ class PrecipinationViewModel(
             }
         })
     }
+
+    fun fetchCurrentLocationWeather(lat: Double, lon: Double){
+        val call = precipinationService.getCurrentLocationWeather(lat, lon, apiKey)
+
+        call.enqueue(object : Callback<WeatherInfo> {
+            override fun onResponse(p0: Call<WeatherInfo>, p1: Response<WeatherInfo>){
+                if(p1.isSuccessful){
+                    p1.body()?.let { data ->
+                        _weatherInfo.value = data
+                        coordinates = data.coord
+                        Log.d("WeatherInfo", "City name: ${data.name}")
+                    }
+                }else {
+                    Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
+                }
+            }
+
+            override fun onFailure(p0: Call<WeatherInfo>, p1: Throwable) {
+                Log.e("Weather", "Failure Fetching Weather", p1)
+            }
+
+        })
+    }
+
 
     fun clearAlert() {
         _alert.value = null

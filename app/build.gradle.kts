@@ -62,6 +62,9 @@ dependencies {
     implementation(libs.androidx.navigation)
     implementation(libs.androidx.navigation.compose.v289)
 
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.play.services.location)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

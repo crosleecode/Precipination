@@ -19,4 +19,11 @@ interface PrecipinationService {
         @Query("cnt") cnt: Int = 16,
         @Query("appid") apiKey: String
     ): Call<ForecastInfo>
+
+    @GET("weather")
+    fun getCurrentLocationWeather(
+        @Query("lat") lat: Double,
+        @Query("lon") lon: Double,
+        @Query("appid") apiKey: String
+    ): Call<WeatherInfo>
 }

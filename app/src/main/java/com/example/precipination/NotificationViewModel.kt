@@ -24,12 +24,12 @@ class NotificationViewModel (
                         onResult(data)
                     }
                 }else {
-                    Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
+                    //Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
                 }
             }
 
             override fun onFailure(p0: Call<WeatherInfo>, p1: Throwable) {
-                Log.e("Weather", "Failure Fetching Weather", p1)
+                //Log.e("Weather", "Failure Fetching Weather", p1)
                 onResult(null)
             }
 

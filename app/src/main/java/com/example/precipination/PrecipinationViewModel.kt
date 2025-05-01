@@ -41,12 +41,12 @@ class PrecipinationViewModel(
                     }
                 } else {
                     _alert.value = "Invalid Zip Code"
-                    Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
+                    //Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
                 }
             }
 
             override fun onFailure(p0: Call<WeatherInfo>, p1: Throwable) {
-                Log.e("Weather", "Failure Fetching Weather", p1)
+                //Log.e("Weather", "Failure Fetching Weather", p1)
             }
         })
     }
@@ -60,12 +60,12 @@ class PrecipinationViewModel(
                 if (p1.isSuccessful) {
                     _forecastInfo.value = p1.body()?.list
                 } else {
-                    Log.e("Forecast", "Response failed: ${p1.code()}")
+                    //Log.e("Forecast", "Response failed: ${p1.code()}")
                 }
             }
 
             override fun onFailure(call: Call<ForecastInfo>, t: Throwable) {
-                Log.e("Forecast", "Failure Fetching Weather Forecast", t)
+                //Log.e("Forecast", "Failure Fetching Weather Forecast", t)
             }
         })
     }
@@ -82,7 +82,7 @@ class PrecipinationViewModel(
                         //Log.d("WeatherInfo", "City name: ${data.name}")
                     }
                 }else {
-                    Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
+                    //Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
                 }
             }
 

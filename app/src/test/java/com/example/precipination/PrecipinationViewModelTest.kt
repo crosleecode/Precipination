@@ -30,14 +30,22 @@ class PrecipinationViewModelTest {
     }
 
     @Test
-    fun fetchWeatherData_correctZip() = runTest {
+    fun fetchWeatherData_correctWeatherData() = runTest {
         viewModel.fetchWeatherData("55104")
         val result = viewModel.weatherInfo.value
         assertEquals("55104", result?.name)
     }
 
     @Test
-    fun fetchForecast_setsForecastInfo() = runTest {
+    fun fetchWeatherData_failWeatherData() = runTest {
+        service.shouldReturnError = true
+        viewModel.fetchWeatherData("00000")
+        val result = viewModel.weatherInfo.value
+        assertNull(result)
+    }
+
+    @Test
+    fun fetchForecast_correctForecast() = runTest {
         service.testWeatherInfo = WeatherInfo(name = "55104", coord = Coordinates(44.95, -93.16))
 
         viewModel.fetchWeatherData("55104")
@@ -48,14 +56,22 @@ class PrecipinationViewModelTest {
     }
 
     @Test
-    fun fetchCurrentLocationWeather_setsWeatherInfo() = runTest {
+    fun fetchForecast_failForecast() = runTest {
+        service.shouldReturnError = true
+        viewModel.fetchForecast()
+        val forecast = viewModel.forecastInfo.value
+        assertNull(forecast)
+    }
+
+    @Test
+    fun fetchCurrentLocationWeather_correctCurrentLocation() = runTest {
         viewModel.fetchCurrentLocationWeather(44.95, -93.16)
         val result = viewModel.weatherInfo.value
         assertEquals("55104", result?.name)
     }
 
     @Test
-    fun fetchCurrentLocationWeather_setsNullOnFailure() = runTest {
+    fun fetchCurrentLocationWeather_failCurrentLocation() = runTest {
         service.shouldReturnError = true
         viewModel.fetchCurrentLocationWeather(44.95, -93.16)
         val result = viewModel.weatherInfo.value

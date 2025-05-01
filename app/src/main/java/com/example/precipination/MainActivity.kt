@@ -85,12 +85,15 @@ import com.google.android.gms.location.Priority
 import kotlinx.coroutines.Dispatchers
 
 
-class MainActivity : ComponentActivity() {
+class MainActivity(
+    private val testService: PrecipinationService? = null
+) : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val precipinationService = createRetrofitService()
+        //val precipinationService = createRetrofitService()
+        val precipinationService = testService ?: createRetrofitService()
         val apiKey = resources.getString(R.string.open_weather_key)
         val precipinationViewModel = PrecipinationViewModel(precipinationService, apiKey, Dispatchers.IO)
         precipinationViewModel.fetchWeatherData(getString(R.string.default_zip))

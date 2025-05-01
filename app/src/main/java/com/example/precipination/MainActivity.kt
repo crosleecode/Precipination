@@ -82,6 +82,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.Dispatchers
 
 
 class MainActivity : ComponentActivity() {
@@ -91,7 +92,7 @@ class MainActivity : ComponentActivity() {
 
         val precipinationService = createRetrofitService()
         val apiKey = resources.getString(R.string.open_weather_key)
-        val precipinationViewModel = PrecipinationViewModel(precipinationService, apiKey)
+        val precipinationViewModel = PrecipinationViewModel(precipinationService, apiKey, Dispatchers.IO)
         precipinationViewModel.fetchWeatherData(getString(R.string.default_zip))
 
         setContent {

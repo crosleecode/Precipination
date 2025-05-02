@@ -7,8 +7,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.test.rule.GrantPermissionRule
 import org.junit.Rule
 import org.junit.Test
 
@@ -16,6 +18,12 @@ class MainScreenTest {
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule
+    val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        android.Manifest.permission.ACCESS_FINE_LOCATION,
+        android.Manifest.permission.POST_NOTIFICATIONS
+    )
 
     @Test
     fun invalidZip_showsAlertDialog() {
@@ -35,7 +43,7 @@ class MainScreenTest {
         composeTestRule.onNodeWithText("Zip Code").performTextInput("55104")
         composeTestRule.onNodeWithText("Submit").performClick()
 
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodesWithText("Feels like", substring = true)
                 .fetchSemanticsNodes().isNotEmpty()
         }
@@ -49,5 +57,6 @@ class MainScreenTest {
 
         composeTestRule.onAllNodesWithText("Invalid Zip Code").assertCountEquals(0)
     }
+
 
 }

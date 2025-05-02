@@ -304,7 +304,7 @@ fun CurrentLocation(city : String?, onSubmit: (String) -> Unit, precipinationVie
             }) {
                 Icon(
                     imageVector = Icons.Outlined.MyLocation,
-                    contentDescription = null
+                    contentDescription = "Location"
                 )
             }
         }

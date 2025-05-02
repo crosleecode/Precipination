@@ -52,9 +52,11 @@ class NotificationService : Service(){
 
     private fun updateNotification(weather: WeatherInfo) {
         val temp = tempConversion(weather.main.temp)
-        val title = "${weather.name} Weather"
-        val text = "${weather.weather.firstOrNull()?.main ?: "Weather"} • $temp°F"
-        val iconCode = weather.weather.firstOrNull()?.icon ?: "01d"
+        val condition = weather.weather.firstOrNull()
+        val title = getString(R.string.notification_title, weather.name)
+        val text = getString(R.string.notification_text, condition?.main ?: "Weather", temp)
+
+        val iconCode = condition?.icon ?: "01d"
         val iconId = getWeatherIcon(iconCode)
 
         val notification = NotificationCompat.Builder(this, "notification_channel")

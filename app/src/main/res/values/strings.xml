@@ -16,5 +16,8 @@
     <string name="back_button">Back</string>
     <string name="forecast_button">Forecast</string>
     <string name="getting_weather">Getting weather...</string>
+    <string name="weather">Weather</string>
     <string name="precipination_notifications">Precipination Notifications</string>
+    <string name="notification_title">%1$s Weather</string>
+    <string name="notification_text">%1$s • %2$d°F</string>
 </resources>

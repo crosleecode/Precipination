@@ -64,6 +64,18 @@ dependencies {
 
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.play.services.location)
+    implementation(libs.androidx.rules)
+
+    testImplementation(libs.retrofit.mock)
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.androidx.core.testing)
+
+    androidTestImplementation(libs.androidx.core)
+    androidTestImplementation(libs.androidx.junit.v115)
+    androidTestImplementation(libs.androidx.runner.v161)
+    androidTestImplementation(libs.retrofit.mock)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -72,4 +84,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    testImplementation(kotlin("test"))
 }

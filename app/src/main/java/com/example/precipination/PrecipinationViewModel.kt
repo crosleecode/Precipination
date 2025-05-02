@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -11,8 +12,8 @@ import retrofit2.Response
 
 class PrecipinationViewModel(
     private val precipinationService : PrecipinationService,
-    private val apiKey : String
-
+    private val apiKey : String,
+    private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
     private val _weatherInfo : MutableLiveData<WeatherInfo> = MutableLiveData()
     val weatherInfo : LiveData<WeatherInfo> = _weatherInfo
@@ -32,18 +33,20 @@ class PrecipinationViewModel(
             override fun onResponse(p0: Call<WeatherInfo>, p1: Response<WeatherInfo>) {
                 if (p1.isSuccessful) {
                     p1.body()?.let { data ->
-                        _weatherInfo.value = data
-                        _alert.value = null
+                        //_weatherInfo.value = data
+                        _weatherInfo.postValue(data)
+                        //_alert.value = null
+                        _alert.postValue(null)
                         coordinates = data.coord
                     }
                 } else {
                     _alert.value = "Invalid Zip Code"
-                    Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
+                    //Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
                 }
             }
 
             override fun onFailure(p0: Call<WeatherInfo>, p1: Throwable) {
-                Log.e("Weather", "Failure Fetching Weather", p1)
+                //Log.e("Weather", "Failure Fetching Weather", p1)
             }
         })
     }
@@ -57,12 +60,12 @@ class PrecipinationViewModel(
                 if (p1.isSuccessful) {
                     _forecastInfo.value = p1.body()?.list
                 } else {
-                    Log.e("Forecast", "Response failed: ${p1.code()}")
+                    //Log.e("Forecast", "Response failed: ${p1.code()}")
                 }
             }
 
             override fun onFailure(call: Call<ForecastInfo>, t: Throwable) {
-                Log.e("Forecast", "Failure Fetching Weather Forecast", t)
+                //Log.e("Forecast", "Failure Fetching Weather Forecast", t)
             }
         })
     }
@@ -76,15 +79,15 @@ class PrecipinationViewModel(
                     p1.body()?.let { data ->
                         _weatherInfo.value = data
                         coordinates = data.coord
-                        Log.d("WeatherInfo", "City name: ${data.name}")
+                        //Log.d("WeatherInfo", "City name: ${data.name}")
                     }
                 }else {
-                    Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
+                    //Log.e("Weather", "Failure fetching weather data: ${p1.code()}")
                 }
             }
 
             override fun onFailure(p0: Call<WeatherInfo>, p1: Throwable) {
-                Log.e("Weather", "Failure Fetching Weather", p1)
+                //Log.e("Weather", "Failure Fetching Weather", p1)
             }
 
         })
